@@ -26,11 +26,16 @@ Ensure you have **pip** installed, and then install all necessary Python package
 pip install -r requirements.txt # Install dependencies from requirements.txt
 ```
 **3.Training Workflow**
-1.**Download Data:** To run the model on a specific dataset, you must download the corresponding dataset into the data folder. Create a subfolder within the data folder, name it using the **lowercase** name of the dataset, and place the dataset files inside this folder.
-2.**Configure Model Parameters:** Configure or modify the model parameters for the specified dataset within the configs folder to meet the dataset's training requirements.
-3.**Modify Time Steps:** Specific time steps, such as the prediction frames (e.g., 10, 20), can be modified in the configs files and in openstl/datasets/dataset_constant.py.
-4.**Modify Scripts:** You can modify the number of training epochs, the model, and other parameters in the corresponding files within the scripts folder. To resume training from a specific checkpoint, use --resume_from xxx, where xxx is the path to the model checkpoint from a previous run.
-5.**Execute Script:** Run the script (e.g., for the taxibj dataset, run ./scripts/taxibj/taxibj_MTFormer_train.sh).
+
+<1>**Download Data:** To run the model on a specific dataset, you must download the corresponding dataset into the data folder. Create a subfolder within the data folder, name it using the **lowercase** name of the dataset, and place the dataset files inside this folder.
+
+<2>**Configure Model Parameters:** Configure or modify the model parameters for the specified dataset within the configs folder to meet the dataset's training requirements.
+
+<3>**Modify Time Steps:** Specific time steps, such as the prediction frames (e.g., 10, 20), can be modified in the configs files and in openstl/datasets/dataset_constant.py.
+
+<4>**Modify Scripts:** You can modify the number of training epochs, the model, and other parameters in the corresponding files within the scripts folder. To resume training from a specific checkpoint, use --resume_from xxx, where xxx is the path to the model checkpoint from a previous run.
+
+<5>**Execute Script:** Run the script (e.g., for the taxibj dataset, run ./scripts/taxibj/taxibj_MTFormer_train.sh).
 
 ## Contacts
 If you have any questions about the code or the algorithm, please feel free to reach out to:  
