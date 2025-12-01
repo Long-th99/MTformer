@@ -1,0 +1,17 @@
+height       = 64
+width        = 64
+num_channels = 1
+pre_seq      = 10
+after_seq    = 10
+patch_size   = 8
+dim          = 256
+heads        = 8
+dim_head     = 32
+dropout      = 0.0
+attn_dropout = 0.0
+drop_path    = 0.0
+scale_dim    = 4
+depth        = 1
+Ndepth       = 6
+use_physics  = True
+fno = (2,3)

@@ -1,0 +1,105 @@
+dataset_parameters = {
+    'bair': {
+        'in_shape': [4, 3, 64, 64],
+        'pre_seq_length': 4,
+        'aft_seq_length': 12,
+        'total_length': 16,
+        'metrics': ['mse', 'mae', 'ssim', 'psnr', 'lpips'],
+    },
+    'mfmnist': {
+        'in_shape': [10, 1, 64, 64],
+        'pre_seq_length': 10,
+        'aft_seq_length': 10,
+        'total_length': 20,
+        'data_name': 'fmnist',
+        'metrics': ['mse', 'mae', 'ssim', 'psnr'],
+    },
+    'mmnist': {
+        'in_shape': [10, 1, 64, 64],
+        'pre_seq_length': 10,
+        'aft_seq_length': 10,
+        'total_length': 20,
+        'data_name': 'mnist',
+        'metrics': ['mse', 'mae', 'ssim', 'psnr'],
+    },
+    'mmnist_cifar': {
+        'in_shape': [10, 3, 64, 64],
+        'pre_seq_length': 10,
+        'aft_seq_length': 10,
+        'total_length': 20,
+        'data_name': 'mnist_cifar',
+        'metrics': ['mse', 'mae', 'ssim', 'psnr'],
+    },
+
+    'taxibj': {
+        'in_shape': [4, 2, 32, 32],
+        'pre_seq_length': 4,
+        'aft_seq_length': 4,
+        'total_length': 8,
+        'metrics': ['mse', 'mae', 'ssim', 'psnr'],
+    },
+    'human': {
+        'in_shape': [4, 3, 256, 256],
+        'pre_seq_length': 4,
+        'aft_seq_length': 4,
+        'total_length': 8,
+        'metrics': ['mse', 'mae', 'ssim', 'psnr', 'lpips'],
+    },
+
+
+    'sevir_vis':{
+        'in_shape': [13, 1, 768, 768],
+        'pre_seq_length': 13,
+        'aft_seq_length': 12,
+        'total_length': 25,
+        'data_name': 'vis', 
+        'metrics': ['mse', 'mae', 'pod', 'sucr', 'csi', 'lpips'],
+    },
+    'sevir_ir069':{
+        'in_shape': [13, 1, 192, 192],
+        'pre_seq_length': 13,
+        'aft_seq_length': 12,
+        'total_length': 25,
+        'data_name': 'ir069',
+        'metrics': ['mse', 'mae', 'pod', 'sucr', 'csi', 'lpips'],
+    },
+    'sevir_ir107':{
+        'in_shape': [13, 1, 192, 192],
+        'pre_seq_length': 13,
+        'aft_seq_length': 12,
+        'total_length': 25,
+        'data_name': 'ir107',
+        'metrics': ['mse', 'mae', 'pod', 'sucr', 'csi', 'lpips'],
+    },
+    'sevir_vil':{
+        'in_shape': [13, 1, 384, 384],
+        'pre_seq_length': 13,
+        'aft_seq_length': 12,
+        'total_length': 25,
+        'data_name': 'vil', 
+        'metrics': ['mse', 'mae', 'pod', 'sucr', 'csi', 'lpips'],
+    },
+    'navier_stokes_t30': {
+        'in_shape': [10, 1, 64, 64],
+        'pre_seq_length': 10,
+        'aft_seq_length': 10,
+        'total_length': 20,
+        'metrics': ['mse', 'mae', 'ssim', 'psnr'],
+    },
+    'navier_stokes_t20': {
+        'in_shape': [10, 1, 64, 64],
+        'pre_seq_length': 10,
+        'aft_seq_length': 10,
+        'total_length': 20,
+        'metrics': ['mse', 'mae', 'ssim', 'psnr'],
+    },
+    'navier_stokes_t50': {
+        'in_shape': [10scr, 1, 64, 64],
+        'pre_seq_length': 10,
+        'aft_seq_length': 10,
+        'total_length': 20,
+        'metrics': ['mse', 'mae', 'ssim', 'psnr'],
+    },
+
+
+}
