@@ -4,8 +4,7 @@ import torch.nn as nn
 from tqdm import tqdm
 from timm.utils import AverageMeter
 import torch.nn.functional as F
-
-from openstl.models import MTformer_Model
+from openstl.models import MTformer_Model 
 from openstl.utils import reduce_tensor
 from .base_method import Base_method
 
@@ -20,25 +19,21 @@ class MTformer(Base_method):
         return MTformer_Model(model_config=config).to(self.device)
     
     def _predict(self, batch_x, batch_y=None, **kwargs):
-        if self.args.aft_seq_length == self.args.pre_seq_length:
+        if self.args.aft_seq_length <= self.args.pre_seq_length:
             pred_y = self.model(batch_x)
-        elif self.args.aft_seq_length < self.args.pre_seq_length:
-            pred_y = self.model(batch_x)
-            pred_y = pred_y[:, :self.args.aft_seq_length]
-        elif self.args.aft_seq_length > self.args.pre_seq_length:
+            if self.args.aft_seq_length < self.args.pre_seq_length:
+                pred_y = pred_y[:, :self.args.aft_seq_length]
+        else:
             pred_y = []
             d = self.args.aft_seq_length // self.args.pre_seq_length
             m = self.args.aft_seq_length % self.args.pre_seq_length
-
             cur_seq = batch_x.clone()
             for _ in range(d):
                 cur_seq = self.model(cur_seq)
                 pred_y.append(cur_seq)
-
             if m != 0:
                 cur_seq = self.model(cur_seq)
                 pred_y.append(cur_seq[:, :m])
-
             pred_y = torch.cat(pred_y, dim=1)
         return pred_y
 
@@ -49,23 +44,18 @@ class MTformer(Base_method):
         if self.by_epoch:
             self.scheduler.step(epoch)
         train_pbar = tqdm(train_loader) if self.rank == 0 else train_loader
-
         end = time.time()
         for batch_x, batch_y in train_pbar:
             data_time_m.update(time.time() - end)
             self.model_optim.zero_grad()
-
             if not self.args.use_prefetcher:
                 batch_x, batch_y = batch_x.to(self.device), batch_y.to(self.device)
             runner.call_hook('before_train_iter')
-
             with self.amp_autocast():
                 pred_y = self._predict(batch_x)
                 loss = self.criterion(pred_y, batch_y)
-
             if not self.dist:
                 losses_m.update(loss.item(), batch_x.size(0))
-
             if self.loss_scaler is not None:
                 if torch.any(torch.isnan(loss)) or torch.any(torch.isinf(loss)):
                     raise ValueError("Inf or nan loss value. Please use fp32 training!")
@@ -77,26 +67,19 @@ class MTformer(Base_method):
                 loss.backward()
                 self.clip_grads(self.model.parameters())
                 self.model_optim.step()
-
             torch.cuda.synchronize()
             num_updates += 1
-
             if self.dist:
                 losses_m.update(reduce_tensor(loss), batch_x.size(0))
-
             if not self.by_epoch:
                 self.scheduler.step()
             runner.call_hook('after_train_iter')
             runner._iter += 1
-
             if self.rank == 0:
                 log_buffer = 'train loss: {:.4f}'.format(loss.item())
                 log_buffer += ' | data time: {:.4f}'.format(data_time_m.avg)
                 train_pbar.set_description(log_buffer)
-
             end = time.time()
-
         if hasattr(self.model_optim, 'sync_lookahead'):
             self.model_optim.sync_lookahead()
-
         return num_updates, losses_m, eta
