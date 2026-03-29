@@ -4,7 +4,31 @@
 ## 1.(https://github.com/Long-th99/MTformer)MTformer: A Physics-Informed Spatio-temporal Transformer for Complex Dynamic System Modeling
 
 ## 2.Introduction
-Deep learning modeling of spatio-temporal dynamic systems—such as fluid dynamics, weather forecasting, and traffic flow prediction—faces challenges in accurately capturing highly complex spatio-temporal strong dependencies and nonlinear evolutionary dynamics. Existing CNN- and RNN-based frameworks exhibit limitations in characterizing long-range dependencies.We propose a novel hybrid architecture, MTformer, which deeply integrates the global dependency capture mechanism of Transformers, the efficient frequency-domain modeling capability of Fourier Neural Operators (FNO), and a time-differenced physical diffusion module.The core innovation of MTformer lies in its use of a gated Transformer block (GTB) to efficiently capture spatiotemporal coupling relationships, while simultaneously employing a physical diffusion module to effectively suppress error accumulation. This significantly enhances the model's long-term prediction stability and physical interpretability. Furthermore, the introduced FNO mechanism further strengthens the model's ability to approximate solutions to complex nonlinear differential equations.Extensive experimental results demonstrate MTformer's superiority: on the urban dynamics prediction dataset TaxiBJ, the model achieves a mean squared error of 0.27 and a mean absolute error of 14.31, comprehensively outperforming all mainstream baseline models. On the Navier-Stokes dataset simulating strongly nonlinear systems, MTformer also exhibits outstanding long-term inference performance.These findings indicate that MTformer achieves a significant leap in prediction accuracy through the organic coupling of the Transformer backbone with physical time-differencing and FNO, making it particularly suitable for precise modeling and long-term forecasting of strongly nonlinear dynamic systems.
+Accurately modeling complex spatiotemporal dynamics in systems such as fluid
+dynamics and weather forecasting remains a grand challenge due to the difficulty in
+balancing long-range dependency with numerical stability. Conventional CNN-based
+and RNN-based frameworks exhibit limited capability in capturing global dependencies
+and suffer from substantial error accumulation. While recent Transformer-based
+models excel at capturing global correlations, their lack of explicit physical inductive
+bias causes them to overfit statistical noise instead of underlying dynamical laws,
+leading to the generation of non-physical high-frequency oscillations,termed "physical
+artifacts",which undermines long-horizon forecasting stability.To address these issues,
+we propose MTformer, a physics-guided model built upon a systematic interleaving
+evolution framework. Our primary contribution is the strategic integration of TD-Blocks
+and Fourier Neural Operators directly into the Gated Transformer backbone,
+enabling a self-correcting feature evolution that alternates between neural-driven
+attention and operator-driven physical constraints. In this architecture, the Gated
+Transformer captures complex spatiotemporal nonlinearities, while the TD-Blocks
+embed a Laplacian-type smoothness prior to mitigate non-physical drifts.
+Simultaneously, the FNO components refine global spectral representations to
+maintain multi-scale consistency.Extensive experiments demonstrate the effectiveness
+of MTformer. On the TaxiBJ urban traffic prediction benchmark, the proposed model
+achieves an MSE of 0.271 and an MAE of 14.31, outperforming all compared state-ofthe-art baselines. On the Navier–Stokes benchmark for strongly nonlinear flow
+dynamics, MTformer also exhibits superior long-term forecasting accuracy and stability.
+These results indicate that the proposed framework provides a robust  solution for
+spatiotemporal prediction by jointly leveraging global attention, spectral modeling, and
+Laplacian-inspired temporal regularization.Our code is available at
+https://github.com/Long-th99/MTformer.
 
 ## 3.Flowchart
 Here is a flowchart illustrating the overall process of the MTformer framework:
