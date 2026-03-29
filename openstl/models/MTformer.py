@@ -10,72 +10,46 @@ from openstl.modules import Attention, PreNorm
 import math
 import matplotlib.pyplot as plt
 
-# --- 1. 位置编码函数 (保留你之前的实现逻辑) ---
 def sinusoidal_embedding(n_channels, dim):
-    """
-    生成正弦位置编码
-    """
     pe = torch.FloatTensor([[p / (10000 ** (2 * (i // 2) / dim)) for i in range(dim)]
                            for p in range(n_channels)])
     pe[:, 0::2] = torch.sin(pe[:, 0::2])
     pe[:, 1::2] = torch.cos(pe[:, 1::2])
     return rearrange(pe, '... -> 1 ...')
 
-# --- 2. 升级后的多尺度 TD-Block ---
 class TDBlock(nn.Module):
-    """
-    Temporal Difference Block (TD-Block) - Multi-Scale Version
-    升级版：支持传入多个 alpha 列表，实现多尺度时间差分
-    """
     def __init__(self, d_model, alphas=(0.05,)):
         super().__init__()
         self.d_model = d_model
-        
-        # 兼容处理：确保 alphas 是列表或元组
         if isinstance(alphas, (int, float)):
             alphas = (alphas,)
         self.alphas = alphas
         self.M = len(alphas)
-        
-        # 验证整除性
         if d_model % self.M != 0:
-            raise ValueError(f"d_model ({d_model}) 必须能被 alphas 的数量 ({self.M}) 整除！")
+            raise ValueError(f"d_model ({d_model}) must be divisible by the number of alphas ({self.M})")
         
         self.group_dim = d_model // self.M
+        self.td_conv = nn.Conv1d(d_model, d_model, kernel_size=3, padding=1, groups=d_model, bias=False)
 
-        # 使用 depthwise conv 保持通道独立性
-        self.td_conv = nn.Conv1d(
-            d_model, d_model, 
-            kernel_size=3, 
-            padding=1, 
-            groups=d_model, 
-            bias=False
-        )
-
-        # 初始化权重：多尺度填充
         with torch.no_grad():
             weights = torch.zeros(d_model, 1, 3)
             for i, alpha in enumerate(self.alphas):
                 start = i * self.group_dim
                 end = (i + 1) * self.group_dim
-                # 离散拉普拉斯算子
                 weights[start:end, 0, 0] = -alpha
                 weights[start:end, 0, 1] = 2 * alpha
                 weights[start:end, 0, 2] = -alpha
             self.td_conv.weight.copy_(weights)
         
-        # 物理算子固定
         self.td_conv.weight.requires_grad = False
 
     def forward(self, x):
-        # x shape: [Batch*Patches, T, Dim]
         identity = x
-        x = x.permute(0, 2, 1) # [B*N, Dim, T]
+        x = x.permute(0, 2, 1)
         x = self.td_conv(x)
-        x = x.permute(0, 2, 1) # [B*N, T, Dim]
+        x = x.permute(0, 2, 1)
         return identity + x
 
-# --- 3. FNO 相关组件 ---
 class SpectralConv2d(nn.Module):
     def __init__(self, in_channels, out_channels, modes1, modes2):
         super(SpectralConv2d, self).__init__()
@@ -109,7 +83,6 @@ class FNOFFN(nn.Module):
         identity = x
         return identity + self.spectral_conv(x) + self.pointwise_conv(x)
 
-# --- 4. Transformer 核心组件 ---
 class SwiGLU(nn.Module):
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.SiLU, drop=0.):
         super().__init__()
@@ -144,7 +117,6 @@ class GatedTransformer(nn.Module):
             x = x + drop(ff(x))
         return self.norm(x)
 
-# --- 5. MTformer 层结构 ---
 class MTformerLayer(nn.Module):
     def __init__(self, dim, depth, heads, dim_head, mlp_dim, dropout=0.,
                  attn_dropout=0., drop_path=0.1, use_td=True, td_alpha=0.05,
@@ -155,18 +127,15 @@ class MTformerLayer(nn.Module):
         self.num_patches_h = num_patches_h
         self.num_patches_w = num_patches_w
 
-        # Transformers (TS & ST Branches)
         self.ts_temporal_transformer = GatedTransformer(dim, depth, heads, dim_head, mlp_dim, dropout, attn_dropout, drop_path)
         self.ts_space_transformer = GatedTransformer(dim, depth, heads, dim_head, mlp_dim, dropout, attn_dropout, drop_path)
         self.st_space_transformer = GatedTransformer(dim, depth, heads, dim_head, mlp_dim, dropout, attn_dropout, drop_path)
         self.st_temporal_transformer = GatedTransformer(dim, depth, heads, dim_head, mlp_dim, dropout, attn_dropout, drop_path)
 
-        # 物理差分模块 (这里 td_alpha 可以是 float 或 list)
         if self.use_td:
             self.td_ts = TDBlock(dim, td_alpha)
             self.td_st = TDBlock(dim, td_alpha)
 
-        # FNO
         if self.use_fno:
             m1, m2 = max(num_patches_h // 2, 1), max(num_patches_w // 2, 1)
             self.fno_ts = FNOFFN(dim, m1, m2)
@@ -176,7 +145,6 @@ class MTformerLayer(nn.Module):
         b, t, n, d = x.shape
         h, w = self.num_patches_h, self.num_patches_w
 
-        # TS Branch
         x_ts = rearrange(x, 'b t n d -> (b n) t d')
         x_ts = self.ts_temporal_transformer(x_ts)
         if self.use_td:
@@ -189,7 +157,6 @@ class MTformerLayer(nn.Module):
             x_ts = self.fno_ts(x_ts)
             x_ts = rearrange(x_ts, "(bt) d h w -> (bt) (h w) d")
 
-        # ST Branch
         x_st = rearrange(x_ts, '(b t) n d -> b t n d', b=b)
         x_st = rearrange(x_st, 'b t n d -> (b t) n d')
         x_st = self.st_space_transformer(x_st)
@@ -206,7 +173,6 @@ class MTformerLayer(nn.Module):
 
         return rearrange(x_st, '(b n) t d -> b t n d', b=b)
 
-# --- 6. MTformer 主模型 ---
 class MTformer_Model(nn.Module):
     def __init__(self, model_config, **kwargs):
         super().__init__()
@@ -215,16 +181,13 @@ class MTformer_Model(nn.Module):
         self.dim = model_config['dim']
         self.pre_seq = model_config['pre_seq']
         
-        # 获取 alpha 配置 (可以是单尺度 0.05, 也可以是多尺度列表 [0.01, 0.05...])
         td_alpha = model_config.get('physics_alpha', 0.05)
         
-        # Patching
         self.to_patch = nn.Sequential(
             Rearrange('b t c (h p1) (w p2) -> b t (h w) (p1 p2 c)', p1=ps, p2=ps),
             nn.Linear(model_config['num_channels'] * ps**2, self.dim)
         )
 
-        # 实例化 MTformerLayers
         self.blocks = nn.ModuleList([
             MTformerLayer(
                 dim=self.dim, depth=model_config['depth'], heads=model_config['heads'],
@@ -245,16 +208,11 @@ class MTformer_Model(nn.Module):
     def forward(self, x):
         B, T, C, H, W = x.shape
         x = self.to_patch(x)
-        
-        # 使用 Sinusoidal 位置编码
-        # 注意：这里需要确保 pre_seq 长度一致
         pe = sinusoidal_embedding(T, self.dim).to(x.device)
-        # 将 pe 广播到每个 patch
         x = x + pe.unsqueeze(2) 
 
         for blk in self.blocks:
             x = blk(x)
 
-        # 重构图像
         x = self.head(x).view(B, T, self.num_h, self.num_w, C, H//self.num_h, W//self.num_w)
         return x.permute(0, 1, 4, 2, 5, 3, 6).reshape(B, T, C, H, W)
