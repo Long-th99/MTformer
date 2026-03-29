@@ -51,7 +51,7 @@ pip install -r requirements.txt # Install dependencies from requirements.txt
 
 <1>**Download Data:** To run the model on a specific dataset, you must download the corresponding dataset into the data folder. Create a subfolder within the data folder, name it using the **lowercase** name of the dataset, and place the dataset files inside this folder.
 
-<2>**Configure Model Parameters:** Configure or modify the model parameters for the specified dataset within the configs folder to meet the dataset's training requirements.
+<2>**Configure Model Parameters:** Configure or modify the model parameters for the specified dataset within the configs folder to meet the dataset's training requirements.Note: The number of elements in physics_alpha must be a divisor of the model dimension (dim).
 
 <3>**Modify Time Steps:** Specific time steps, such as the prediction frames (e.g., 10, 20), can be modified in the configs files and in openstl/datasets/dataset_constant.py.
 
