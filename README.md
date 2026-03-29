@@ -8,8 +8,7 @@ Deep learning modeling of spatio-temporal dynamic systems—such as fluid dynami
 
 ## 3.Flowchart
 Here is a flowchart illustrating the overall process of the MTformer framework:
-![](imgs/Model.png)
-<img width="1794" height="1021" alt="Model" src="imgs/Model.png" />
+![MTformer Framework](https://github.com/Long-th99/MTformer/raw/main/imgs/Model.png)
 
 
 ## Quick Start
